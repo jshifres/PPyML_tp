@@ -1,0 +1,138 @@
+---
+title: "Tp_PPyML"
+author: "Gonzalez / Shifres"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+ 
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+
+```
+
+Casos COVID-19
+
+Portal de datos Abiertos del Ministerio de Salud de La Nación
+
+http://datos.salud.gob.ar
+
+Notificaciones realizadas por efectores de salud al Sistema Nacional de Vigilancia de la Salud al evento Caso Internado y/o fallecido por COVID-19 
+
+## Lectura y análisis de los datos
+
+```{r, echo=FALSE}
+
+## Lectura de los archivos
+
+covid19_internados_fallecidos <- read_csv("datos/Covid19_Internados_y_Fallecidos.csv")
+
+```
+
+Mostramos las primeras 10 observaciones que nos permite considerar la distribución 
+
+
+```{r, echo=FALSE}
+head(nivel_educativo_sexo_anio,10)
+```
+
+```{r}
+
+#dimensión 
+dim(covid19_internados_fallecidos)
+
+#246917 observaciones 19 variables
+
+ncol(covid19_internados_fallecidos)
+nrow(covid19_internados_fallecidos)
+
+#attributes(covid19_internados_fallecidos)
+attr(covid19_internados_fallecidos,"names") 
+#[1] "IDEVENTOCASO"              "EVENTO"                    "EDAD_DIAGNOSTICO"         
+#[4] "PAIS_RESIDENCIA"           "ID_PROV_INDEC_RESIDENCIA"  "PROVINCIA_RESIDENCIA"     
+#[7] "ID_DEPTO_INDEC_RESIDENCIA" "DEPARTAMENTO_RESIDENCIA"   "FECHA_APERTURA"           
+#[10] "SEPI_APERTURA"             "FIS"                       "FECHA_INTERNACION"        
+#[13] "CUIDADO_INTENSIVO"         "FECHA_CUI_INTENSIVOS"      "FALLECIDO"                
+#[16] "FECHA_FALLECIMIENTO"       "ID_PROV_INDEC_CARGA"       "PROVINCIA_CARGA"          
+#[19] "CLASIFICACION_ALGORITMO"  
+
+attr(covid19_internados_fallecidos,"class")  
+```
+```{r}
+
+#histograma, frecuencia
+#buscamos valores nulos
+sum(any(is.na(covid19_internados_fallecidos$EDAD_DIAGNOSTICO))) 
+#una observación con valor nulo
+
+
+covid19_internados_fallecidos|> 
+  filter(!is.na(EDAD_DIAGNOSTICO)) |> 
+  group_by(EDAD_DIAGNOSTICO)|>
+  summarise(count=n())|>
+  ggplot(aes(x=EDAD_DIAGNOSTICO, fill=count))+
+  geom_histogram()
+
+
+
+```
+nos encontramos con valores absurdos para la edad (mayores a 2000)
+
+```{r}
+
+  covid19_internados_fallecidosEdad<-covid19_internados_fallecidos|> 
+  filter(!is.na(EDAD_DIAGNOSTICO) & EDAD_DIAGNOSTICO<130)
+  
+  hist(covid19_internados_fallecidosEdad$EDAD_DIAGNOSTICO,
+     col='lightblue',
+     main='histograma Edades',
+     xlab='Edad',
+     ylab='Frecuencia')
+
+
+#covid19_internados_fallecidosEdad<-covid19_internados_fallecidos|> 
+#  filter(!is.na(EDAD_DIAGNOSTICO) & EDAD_DIAGNOSTICO<130)|> 
+#  group_by(EDAD_DIAGNOSTICO)|>
+#  summarise(count=n())
+
+```
+```{r}
+
+#summarize del dataset, distribución, boxplot
+#summary(covid19_internados_fallecidosEdad)
+
+#calculo medias
+median(covid19_internados_fallecidosEdad$EDAD_DIAGNOSTICO, na.rm = TRUE)
+
+#boxplot
+boxplot(covid19_internados_fallecidosEdad$EDAD_DIAGNOSTICO,
+        data=covid19_internados_fallecidosEdad,
+        main='Edades con filtro',
+        ylab='Edad',
+        col='steelblue',
+        border='black')
+
+#boxplot sin filtro se ven los valores atípicos
+boxplot(covid19_internados_fallecidos$EDAD_DIAGNOSTICO,
+        data=covid19_internados_fallecidos,
+        main='Edades sin filtro',
+        ylab='Edad',
+        col='steelblue',
+        border='black')
+
+```
+
